@@ -2,11 +2,12 @@ const express = require('express');
 const mongoose = require('mongoose');
 const bcrypt = require('bcrypt');
 const cors = require('cors');
+const bodyParser = require('body-parser');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(express.json());
+app.use(bodyParser.json());
 app.use(cors());
 
 // MongoDB connection
@@ -20,6 +21,12 @@ db.once('open', () => {
 const User = mongoose.model('User', new mongoose.Schema({
   username: String,
   password: String
+}));
+
+const Post = mongoose.model('Post', new mongoose.Schema({
+  title: String,
+  content: String,
+  author: String
 }));
 
 // API route to fetch all users
@@ -46,9 +53,6 @@ app.delete('/users/:userId', async (req, res) => {
 });
 
 // Registration route
-// Registration route
-// Registration route
-// Registration route
 app.post('/register', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -70,9 +74,6 @@ app.post('/register', async (req, res) => {
   }
 });
 
-
-
-
 // Login route
 app.post('/login', async (req, res) => {
   try {
@@ -91,6 +92,57 @@ app.post('/login', async (req, res) => {
     res.status(500).json({ error: 'Login failed' });
   }
 });
+
+// API route to create a new post
+app.post('/posts', async (req, res) => {
+  try {
+    const { title, content, author } = req.body;
+    const newPost = new Post({ title, content, author });
+    await newPost.save();
+    res.status(201).json({ message: 'Post created successfully' });
+  } catch (error) {
+    console.error('Failed to create post:', error.message);
+    res.status(500).json({ error: 'Failed to create post' });
+  }
+});
+
+// API route to fetch all posts
+app.get('/posts', async (req, res) => {
+  try {
+    const posts = await Post.find({});
+    res.status(200).json(posts);
+  } catch (error) {
+    console.error('Failed to fetch posts:', error.message);
+    res.status(500).json({ error: 'Failed to fetch posts' });
+  }
+});
+
+// API route to delete a post by ID
+app.delete('/posts/:postId', async (req, res) => {
+  try {
+    const { postId } = req.params;
+    await Post.findByIdAndDelete(postId);
+    res.status(200).json({ message: 'Post deleted successfully' });
+  } catch (error) {
+    console.error('Failed to delete post:', error.message);
+    res.status(500).json({ error: 'Failed to delete post' });
+  }
+});
+
+// API route to fetch posts by username
+// API route to fetch posts by username
+app.get('/posts/:username', async (req, res) => {
+  try {
+    const { username } = req.params;
+    const posts = await Post.find({ author: username });
+    res.status(200).json(posts);
+  } catch (error) {
+    console.error('Failed to fetch posts:', error.message);
+    res.status(500).json({ error: 'Failed to fetch posts' });
+  }
+});
+
+
 
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);

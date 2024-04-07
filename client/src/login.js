@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
-const Login = ({ setIsLoggedIn }) => {
+const Login = ({ handleLogin }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [feedback, setFeedback] = useState('');
 
-  const handleLogin = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const response = await axios.post('http://localhost:5000/login', { username, password });
       console.log(response.data);
-      setIsLoggedIn(true);
+      handleLogin(username); // Call handleLogin with the username
       setFeedback('');
     } catch (error) {
       console.error('Login failed:', error.response.data);
@@ -22,7 +22,7 @@ const Login = ({ setIsLoggedIn }) => {
   return (
     <div>
       <h2>Login</h2>
-      <form onSubmit={handleLogin}>
+      <form onSubmit={handleSubmit}>
         <input type="text" placeholder="Username" value={username} onChange={(e) => setUsername(e.target.value)} />
         <input type="password" placeholder="Password" value={password} onChange={(e) => setPassword(e.target.value)} />
         <button type="submit">Login</button>

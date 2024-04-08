@@ -1,7 +1,9 @@
+// PostEditor.js
+
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import styled from 'styled-components';
-import logo from './logo.png'; // Import the logo image
+import logo from '../logo.png';
 
 const Header = styled.header`
   padding: 10px 0;
@@ -110,12 +112,12 @@ const PostEditor = () => {
   const [username, setUsername] = useState('');
   const [feedback, setFeedback] = useState('');
   const [showLogin, setShowLogin] = useState(false);
-  const [showRegister, setShowRegister] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [showPopup, setShowPopup] = useState(false);
   const [showCountdown, setShowCountdown] = useState(false);
   const [countdownSeconds, setCountdownSeconds] = useState(3);
+  const [posts, setPosts] = useState([]);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
@@ -123,7 +125,17 @@ const PostEditor = () => {
       setUsername(storedUser);
       setIsLoggedIn(true);
     }
+    fetchPosts();
   }, []);
+
+  const fetchPosts = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/posts');
+      setPosts(response.data);
+    } catch (error) {
+      console.error('Failed to fetch posts:', error);
+    }
+  };
 
   useEffect(() => {
     let countdownInterval;
@@ -133,25 +145,17 @@ const PostEditor = () => {
       }, 1000);
 
       if (countdownSeconds === 0) {
-        window.location.href = '/'; // Redirect to the main page
+        window.location.href = '/';
       }
     }
 
     return () => clearInterval(countdownInterval);
   }, [showCountdown, countdownSeconds]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    setIsLoggedIn(false);
-    setUsername('');
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Split the title and content into words
     const titleWords = title.split(/\s+/);
     const contentWords = content.split(/\s+/);
-    // Calculate the total number of words
     const totalWords = titleWords.length + contentWords.length;
     if (totalWords > 100) {
       setFeedback('Total words should not exceed 100');
@@ -161,29 +165,18 @@ const PostEditor = () => {
       const response = await axios.post('http://localhost:5000/posts', {
         title,
         content,
-        author: username
+        author: username,
       });
       console.log(response.data);
       setFeedback('Message sent successfully');
       setShowPopup(true);
       setShowCountdown(true);
-      // Reset the form after successful submission
       setTitle('');
       setContent('');
+      fetchPosts();
     } catch (error) {
       console.error('Failed to submit post:', error.response.data);
       setFeedback('Failed to send message');
-    }
-  };
-
-  const handleLogin = async (username, password) => {
-    try {
-      localStorage.setItem('user', username);
-      setIsLoggedIn(true);
-      setUsername(username);
-      setShowLogin(false); // Close the login popup after successful login
-    } catch (error) {
-      setFeedback('Login failed');
     }
   };
 
@@ -223,18 +216,6 @@ const PostEditor = () => {
           {isLoggedIn && <SubmitButton type="submit">Submit</SubmitButton>}
         </Form>
       </Popup>
-      {showLogin && (
-        <Overlay>
-          <Popup>
-            <Title>Login</Title>
-            <Form onSubmit={handleLogin}>
-              <Input type="text" placeholder="Username" />
-              <Input type="password" placeholder="Password" />
-              <SubmitButton type="submit">Login</SubmitButton>
-            </Form>
-          </Popup>
-        </Overlay>
-      )}
       {showPopup && (
         <Overlay>
           <Popup>
@@ -259,8 +240,35 @@ const PostEditor = () => {
           </Popup>
         </Overlay>
       )}
+
     </div>
   );
+};
+
+const formatTimeElapsed = (dateString) => {
+  const postDate = new Date(dateString);
+  const currentDate = new Date();
+  const timeDifference = currentDate.getTime() - postDate.getTime();
+  const seconds = Math.floor(timeDifference / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  const months = Math.floor(days / 30);
+  const years = Math.floor(months / 12);
+
+  if (years > 0) {
+    return `${years} ${years === 1 ? 'year' : 'years'} ago`;
+  } else if (months > 0) {
+    return `${months} ${months === 1 ? 'month' : 'months'} ago`;
+  } else if (days > 0) {
+    return `${days} ${days === 1 ? 'day' : 'days'} ago`;
+  } else if (hours > 0) {
+    return `${hours} ${hours === 1 ? 'hour' : 'hours'} ago`;
+  } else if (minutes > 0) {
+    return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
+  } else {
+    return `${seconds} ${seconds === 1 ? 'second' : 'seconds'} ago`;
+  }
 };
 
 export default PostEditor;

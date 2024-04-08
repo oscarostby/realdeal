@@ -1,14 +1,13 @@
-// App.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import logo from './logo.png';
+import logo from '../logo.png';
 import styled from 'styled-components';
 import { useNavigate } from 'react-router-dom';
 
 const Header = styled.header`
   padding: 10px 0;
   display: flex;
-  justify-content: center;
+  justify-content: flex-start; /* Endret fra 'center' til 'flex-start' */
   align-items: center;
 `;
 
@@ -34,6 +33,10 @@ const Button = styled.button`
     background-color: white;
     color: black;
   }
+`;
+
+const ProfileButton = styled(Button)` /* Bruker Button-stilen til profilknappen */
+  margin-left: 0; /* Fjerner venstremargin for å skille den fra andre knapper */
 `;
 
 const BitterUser = styled.h2`
@@ -91,8 +94,6 @@ const ErrorMessage = styled.div`
   overflow: hidden; /* Hide overflow */
 `;
 
-
-
 const SubmitButton = styled.button`
   background-color: black;
   color: white;
@@ -118,7 +119,6 @@ const PostBox = styled.div`
   border-radius: 5px;
   margin-bottom: 20px;
   padding: 10px;
-  height: 400px;
   width: 70%;
   max-width: 1000px;
 `;
@@ -144,6 +144,44 @@ const PostContent = styled.p`
 const PostAuthor = styled.p`
   text-align: right;
   font-size: 12px;
+  margin-right: -860px;
+`;
+
+const HelpButton = styled.button`
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: black;
+  color: white;
+  border: none;
+  border-radius: 5px; /* Juster radiusen for å gjøre den mer avrundet */
+  padding: 10px 20px; /* Juster padding for å gi mer plass til teksten */
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 10; /* Plasserer knappen øverst */
+  transition: all .2s ease-in-out;
+
+  &:hover {
+    background-color: white;
+    color: black;
+    border: 2px solid black;
+  }
+`;
+
+const HelpPopup = styled.div`
+  position: fixed;
+  bottom: 70px; /* Juster posisjonen for å matche den avlange knappen */
+  right: 20px;
+  background-color: white;
+  padding: 10px;
+  border: 2px solid black;
+  border-radius: 5px;
+  display: ${({ show }) => (show ? 'block' : 'none')};
+  z-index: 9; /* Plasserer popup-boksen under knappen */
+`;
+
+const HelpText = styled.p`
+  margin: 0;
 `;
 
 const App = () => {
@@ -155,6 +193,7 @@ const App = () => {
   const [showLogin, setShowLogin] = useState(false);
   const [showRegister, setShowRegister] = useState(false);
   const [posts, setPosts] = useState([]);
+  const [showHelpPopup, setShowHelpPopup] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -174,7 +213,9 @@ const App = () => {
     const fetchPosts = async () => {
       try {
         const response = await axios.get('http://localhost:5000/posts');
-        setPosts(response.data);
+        // Sort posts in descending order based on creation date
+        const sortedPosts = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        setPosts(sortedPosts);
       } catch (error) {
         console.error('Failed to fetch posts:', error.response.data);
       }
@@ -231,6 +272,31 @@ const App = () => {
 
   const handleMakePost = () => {
     navigate('/PostEditor');
+  };
+
+  const getTimeElapsed = (createdAt) => {
+    const now = new Date();
+    const createdDate = new Date(createdAt);
+    if (isNaN(createdDate.getTime())) {
+      return 'Invalid date';
+    }
+    const diff = Math.abs(now - createdDate);
+    const minutes = Math.floor(diff / (1000 * 60));
+    if (minutes < 60) {
+      return `${minutes}m ago`;
+    } else if (minutes < 60 * 24) {
+      return `${Math.floor(minutes / 60)}h ago`;
+    } else if (minutes < 60 * 24 * 30) {
+      return `${Math.floor(minutes / (60 * 24))}d ago`;
+    } else if (minutes < 60 * 24 * 365) {
+      return `${Math.floor(minutes / (60 * 24 * 30))}mo ago`;
+    } else {
+      return `${Math.floor(minutes / (60 * 24 * 365))}y ago`;
+    }
+  };
+
+  const handleHelpButtonClick = () => {
+    navigate('/help');
   };
 
   const LoginPopup = ({ handleLogin }) => {
@@ -317,7 +383,10 @@ const App = () => {
         <Logo src={logo} alt="Logo" />
         <ButtonContainer>
           {isLoggedIn ? (
-            <Button onClick={handleLogout}>Logout</Button>
+            <>
+              <ProfileButton onClick={() => navigate(`/${username}`)}>{username}</ProfileButton>
+              <Button onClick={handleLogout}>Logout</Button>
+            </>
           ) : (
             <>
               <Button onClick={() => setShowLogin(true)}>Login</Button>
@@ -336,14 +405,15 @@ const App = () => {
       {showRegister && <RegisterPopup handleRegister={handleRegister} />}
       <PostBoxContainer>
         <h3>Posts:</h3>
-        {posts.map((post, index) => (
+        {posts.slice(0, 5).map((post, index) => (
           <PostBox key={index}>
             <PostHeader>
               <div>
                 <PostTitle>{post.title}</PostTitle>
                 <PostContent>{post.content}</PostContent>
+                <PostAuthor>Author: {post.author}</PostAuthor>
+                <p>Posted {getTimeElapsed(post.createdAt)}</p>
               </div>
-              <PostAuthor>Author: {post.author}</PostAuthor>
             </PostHeader>
           </PostBox>
         ))}
@@ -351,6 +421,11 @@ const App = () => {
       {(feedback || feedbackLocal) && (
         <ErrorMessage>{feedback || feedbackLocal}</ErrorMessage>
       )}
+
+      <HelpButton onClick={handleHelpButtonClick}>Do you need help?</HelpButton>
+      <HelpPopup show={showHelpPopup}>
+        <HelpText>Her finner du brukerveiledning.</HelpText>
+      </HelpPopup>
     </div>
   );
 };

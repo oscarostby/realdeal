@@ -42,15 +42,25 @@ const PostAuthor = styled.p`
   font-size: 12px;
 `;
 
+const DeleteButton = styled.button`
+  background-color: red;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+`;
+
 const Profile = () => {
   const [posts, setPosts] = useState([]);
   const navigate = useNavigate();
-  const { username } = useParams();
+  const { username: profileUsername } = useParams();
+  const loggedInUser = localStorage.getItem('user');
 
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/posts/${username}`);
+        const response = await axios.get(`http://localhost:5000/posts/${profileUsername}`);
         setPosts(response.data);
       } catch (error) {
         console.error('Failed to fetch posts:', error.message);
@@ -58,18 +68,30 @@ const Profile = () => {
     };
 
     fetchPosts();
-  }, [username]);
+  }, [profileUsername]);
 
   useEffect(() => {
-    const isLoggedIn = localStorage.getItem('user');
-    if (!isLoggedIn) {
+    if (!loggedInUser) {
       navigate('/');
     }
-  }, [navigate]);
+  }, [loggedInUser, navigate]);
+
+  const handleDeletePost = async (postId) => {
+    try {
+      await axios.delete(`http://localhost:5000/posts/${postId}`, {
+        data: { username: loggedInUser }
+      });
+      setPosts(posts.filter(post => post._id !== postId));
+    } catch (error) {
+      console.error('Failed to delete post:', error.message);
+    }
+  };
+
+  console.log('Logged in user:', loggedInUser);
 
   return (
     <div>
-      <h1>{username}'s Posts</h1>
+      <h1>{profileUsername}'s Posts</h1>
       <PostBoxContainer>
         {posts.map((post, index) => (
           <PostBox key={index}>
@@ -80,6 +102,9 @@ const Profile = () => {
               </div>
               <PostAuthor>Author: {post.author}</PostAuthor>
             </PostHeader>
+            {loggedInUser === profileUsername && (
+              <DeleteButton onClick={() => handleDeletePost(post._id)}>Delete</DeleteButton>
+            )}
           </PostBox>
         ))}
       </PostBoxContainer>

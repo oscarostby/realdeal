@@ -60,7 +60,7 @@ const Profile = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/posts/${profileUsername}`);
+        const response = await axios.get(`http://10.12.11.194:5000/posts/${profileUsername}`);
         setPosts(response.data);
       } catch (error) {
         console.error('Failed to fetch posts:', error.message);
@@ -78,7 +78,7 @@ const Profile = () => {
 
   const handleDeletePost = async (postId) => {
     try {
-      await axios.delete(`http://localhost:5000/posts/${postId}`, {
+      await axios.delete(`http://10.12.11.194:5000/posts/${postId}`, {
         data: { username: loggedInUser }
       });
       setPosts(posts.filter(post => post._id !== postId));

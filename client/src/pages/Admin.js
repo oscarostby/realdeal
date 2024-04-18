@@ -73,10 +73,10 @@ const App = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const postResponse = await axios.get('http://localhost:5000/posts');
+        const postResponse = await axios.get('http://10.12.11.194:5000/posts');
         setPosts(postResponse.data);
 
-        const userResponse = await axios.get('http://localhost:5000/users');
+        const userResponse = await axios.get('http://10.12.11.194:5000/users');
         setUsers(userResponse.data);
       } catch (error) {
         console.error('Failed to fetch data:', error.response.data);
@@ -88,7 +88,7 @@ const App = () => {
 
   const handleDeletePost = async (postId) => {
     try {
-      await axios.delete(`http://localhost:5000/posts/${postId}`);
+      await axios.delete(`http://10.12.11.194:5000/posts/${postId}`);
       setPosts(posts.filter((post) => post._id !== postId));
     } catch (error) {
       console.error('Failed to delete post:', error.response.data);
@@ -97,7 +97,7 @@ const App = () => {
 
   const handleDeleteUser = async (userId) => {
     try {
-      await axios.delete(`http://localhost:5000/users/${userId}`);
+      await axios.delete(`http://10.12.11.194:5000/users/${userId}`);
       setUsers(users.filter((user) => user._id !== userId));
     } catch (error) {
       console.error('Failed to delete user:', error.response.data);

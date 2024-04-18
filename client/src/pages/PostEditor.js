@@ -130,7 +130,7 @@ const PostEditor = () => {
 
   const fetchPosts = async () => {
     try {
-      const response = await axios.get('http://localhost:5000/posts');
+      const response = await axios.get('http://10.12.11.194:5000/posts');
       setPosts(response.data);
     } catch (error) {
       console.error('Failed to fetch posts:', error);
@@ -162,7 +162,7 @@ const PostEditor = () => {
       return;
     }
     try {
-      const response = await axios.post('http://localhost:5000/posts', {
+      const response = await axios.post('http://10.12.11.194:5000/posts', {
         title,
         content,
         author: username,

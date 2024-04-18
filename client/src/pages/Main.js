@@ -199,7 +199,7 @@ const App = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/users');
+        const response = await axios.get('http://10.12.11.194:5000/users');
         setUsers(response.data);
       } catch (error) {
         console.error('Failed to fetch users:', error.response.data);
@@ -212,7 +212,7 @@ const App = () => {
   useEffect(() => {
     const fetchPosts = async () => {
       try {
-        const response = await axios.get('http://localhost:5000/posts');
+        const response = await axios.get('http://10.12.11.194:5000/posts');
         // Sort posts in descending order based on creation date
         const sortedPosts = response.data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         setPosts(sortedPosts);
@@ -240,7 +240,7 @@ const App = () => {
 
   const handleRegister = async (username, password) => {
     try {
-      const response = await axios.post('http://localhost:5000/register', { username, password });
+      const response = await axios.post('http://10.12.11.194:5000/register', { username, password });
       console.log(response.data);
       setFeedback('User registered successfully');
       setShowRegister(false);
